@@ -241,7 +241,10 @@
                                     handleAs="text"
                                     response="{{ file.body }}"></core-ajax>
                             <template if="{{ file.extension | matchExtension('markdown') }}">
-                                <marked-element class="markdown" text="{{ file.body }}"></marked-element>
+                                <marked-element
+                                        class="markdown"
+                                        text="{{ file.body }}"
+                                        on-marked-js-highlight="{{ highlight }}"></marked-element>
                             </template>
                             <template if="{{ file.extension | matchExtension('raw') }}">
                                 {{ file.body }}
@@ -292,6 +295,11 @@
                     obj[type + 'List'] = obj[type].split( /,\s*/ );
                     return obj;
                 }, this );
+            },
+            highlight: function ( e, details, sender ) {
+                setTimeout( function () {
+                    Prism.highlightElement( sender.querySelector( 'code' ) );
+                }, 100 )
             },
             matchExtension: function ( value, type ) {
                 return this[type + 'List'].some( function ( valid ) {

@@ -11,7 +11,9 @@
     "font-roboto": "Polymer/font-roboto#~0.3.4",
     "paper-progress": "Polymer/paper-progress#~0.3.4",
     "paper-input": "Polymer/paper-input#~0.3.4",
-    "paper-icon-button": "Polymer/paper-icon-button#~0.3.4"
+    "paper-icon-button": "Polymer/paper-icon-button#~0.3.4",
+    "prismjs": "*",
+    "marked-element": "Polymer/marked-element#~0.3.4"
   },
   "devDependencies": {},
   "resolutions": {
