@@ -1,0 +1,20 @@
+{
+  "name": "wc-presentation",
+  "version": "0.0.0",
+  "dependencies": {
+    "platform": "Polymer/platform#~0.3.4",
+    "polymer": "Polymer/polymer#~0.3.4",
+    "core-animated-pages": "Polymer/core-animated-pages#~0.3.4",
+    "core-style": "Polymer/core-style#~0.3.4",
+    "mousetrap": "~1.4.6",
+    "core-ajax": "Polymer/core-ajax#~0.3.4",
+    "font-roboto": "Polymer/font-roboto#~0.3.4",
+    "paper-progress": "Polymer/paper-progress#~0.3.4",
+    "paper-input": "Polymer/paper-input#~0.3.4",
+    "paper-icon-button": "Polymer/paper-icon-button#~0.3.4"
+  },
+  "devDependencies": {},
+  "resolutions": {
+    "platform": ">=0.3.0  <1.0.0"
+  }
+}

@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+    <title>Presentation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <script src="presentation/components/platform/platform.js"></script>
+    <link rel="import" href="presentation/wc-presentation.html">
+
+    <style>
+
+        body, html {
+            margin: 0;
+            height: 100%;
+        }
+
+        wc-presentation {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+
+    </style>
+
+</head>
+<body unresolved touch-action="auto">
+    <wc-presentation
+            url="/presentation/slides/"
+            markdown="md, markdown, html"
+            raw="txt"></wc-presentation>
+</body>
+</html>
