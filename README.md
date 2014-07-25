@@ -9,3 +9,5 @@ a presentation about web components using web components
 
 `sh serve.sh`
 
+[demo page](http://autosponge.github.io/wc-presentation/)
+
