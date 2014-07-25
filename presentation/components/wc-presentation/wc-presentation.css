@@ -76,6 +76,7 @@ article.slide {
     text-shadow: 0 0 1em rgba(0, 0, 0, 0.2); }
 
 .markdown p {
+    text-align: center;
     margin: 0.2em 4em;
     line-height: 1.2em; }
 

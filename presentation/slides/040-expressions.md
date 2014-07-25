@@ -1,6 +1,8 @@
 ##Expressions and Filters
 
-We can do more than just read data from the model 
+We can do more than just read 
+
+from the model 
 
 ```markup
 <paper-progress value="{{ selected + 1 }}">

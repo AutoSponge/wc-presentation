@@ -1,10 +1,9 @@
-##Free Docs
+##Documentation
 
-If you follow the naming 
+Each component has <a target="_blank" href="./presentation/components/wc-presentation/">documentation</a> 
 
-and commenting conventions, 
+and _at least_ one demo to help you learn
 
-it just works.
+<a class="docs" target="_blank" href="http://www.polymer-project.org/docs/elements/"></a>
 
-- <a target="_blank" href="./presentation/components/wc-presentation/">local</a>
-- <a target="_blank" href="http://autosponge.github.io/wc-presentation/presentation/components/wc-presentation/">github</a>
+
