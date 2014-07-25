@@ -1,0 +1,264 @@
+<!--
+The wc-presentation element loads files from the given url
+and creates a slide show treating each file as a separate slide.
+Slides using markdown and html can be marked up.  Syntax highlighting
+uses prism and can support any language prism supports.  Mousetrap
+supports keyboard navigation of the slide deck.
+
+Example:
+
+        <wc-presentation
+            url="/presentation/slides/"
+            markdown="md, markdown, html"></wc-presentation>
+
+@element wc-presentation
+@homepage autosponge.github.io/wc-presentation/presentation/
+-->
+
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../font-roboto/roboto.html">
+<link rel="import" href="../core-animated-pages/core-animated-pages.html">
+<link rel="import" href="../core-animated-pages/transitions/slide-from-right.html">
+<link rel="import" href="../core-ajax/core-ajax.html">
+<link rel="import" href="../core-icons/core-icons.html">
+<link rel="import" href="../marked-element/marked-element.html">
+<link rel="import" href="../paper-progress/paper-progress.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-dialog/paper-dialog.html">
+<link rel="import" href="../paper-dialog/paper-dialog-transition.html">
+<link rel="import" href="../paper-button/paper-button.html">
+
+<!-- external script file dependencies -->
+<script src="../mousetrap/mousetrap.min.js"></script>
+<script src="../prismjs/prism.js"></script>
+
+<polymer-element name="wc-presentation"
+                 on-key-right="{{next}}"
+                 on-key-left="{{prev}}"
+                 attributes="url markdown raw">
+
+    <template>
+        <style>
+            :host {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                box-sizing: border-box; }
+
+            #controls paper-input /deep/ input {
+                text-align: center; }
+
+        </style>
+
+        <!-- external stylesheet -->
+        <link rel="stylesheet" href="wc-presentation.css">
+        <link rel="stylesheet" href="../prismjs/prism-okaidia.css">
+
+        <!-- import the list of slides -->
+        <core-ajax
+                auto
+                url="{{ url }}"
+                handleAs="document"
+                on-core-response="{{ handleFilesList }}"></core-ajax>
+
+        <!-- start the presentation section -->
+        <section class="presentation" layout vertical>
+
+            <!-- display progress -->
+            <paper-progress value="{{ selected + 1 }}" min="0" max="{{ files.length }}"></paper-progress>
+
+            <!-- the presentation's main content area -->
+            <section id="content" flex relative>
+
+                <!-- the presentation's pages -->
+                <core-animated-pages id="slides" transitions="slide-from-right" selected="{{ selected }}" notap>
+
+                    <template repeat="{{ file in files }}">
+                        <article class="slide" horizontal layout center-justified>
+                            <core-ajax
+                                    auto
+                                    url="{{ url + file.name }}"
+                                    handleAs="text"
+                                    response="{{ file.body }}"></core-ajax>
+                            <template if="{{ file.extension | matchExtension('markdown') }}">
+                                <marked-element
+                                        class="markdown"
+                                        text="{{ file.body }}"
+                                        on-marked-js-highlight="{{ highlight }}"></marked-element>
+                            </template>
+                            <template if="{{ file.extension | matchExtension('raw') }}">
+                                {{ file.body }}
+                            </template>
+                        </article>
+                    </template>
+
+                </core-animated-pages>
+                <!-- end presentation's pages -->
+
+            </section>
+            <!-- end presentation's main content area -->
+
+            <section id="controls" horizontal layout center-justified>
+                <core-icon icon="icons:arrow-back" on-click="{{prev}}"></core-icon>
+                <paper-input value="{{ selected }}"></paper-input>
+                <core-icon icon="icons:arrow-forward" on-click="{{next}}"></core-icon>
+            </section>
+
+        </section>
+        <!-- end the presentation section -->
+
+    </template>
+
+    <script>
+
+        Polymer( 'wc-presentation', {
+
+            /**
+             * Fired when bound keyboard event is received
+             *
+             * Example: key-left
+             *
+             * @event key-<keyname>
+             */
+
+            /**
+             * The url passed to core-ajax referencing a directory listing of slides
+             *
+             * @attribute url
+             * @type string
+             * @default ''
+             */
+            url: '',
+
+            /**
+             * The list of file extensions parsed by marked (markdown parser)
+             *
+             * @attribute markdown
+             * @type string
+             * @default ''
+             */
+            markdown: 'md,markdown',
+
+            /**
+             * The list of file extensions not parsed
+             *
+             * @attribute raw
+             * @type string
+             * @default ''
+             */
+            raw: 'txt',
+
+            /**
+             * The keys that will be bound by Mousetrap to the keyHandler
+             *
+             * @attribute keys
+             * @type array
+             * @default ['right', 'left']
+             */
+            keys: ['right', 'left'],
+
+            /**
+             * The files loaded from the supplied url
+             *
+             * @attribute files
+             * @type array
+             * @default []
+             */
+            files: [],
+            /**
+             * Updates the selected attribute to the next slide
+             *
+             * @method next
+             */
+            next: function ( /*e, data, sender*/ ) {
+                if ( this.selected < this.files.length - 1 ) {
+                    this.selected += 1;
+                }
+            },
+
+            /**
+             * Updates the selected attribute to the previous slide
+             *
+             * @method prev
+             */
+            prev: function ( /*e, data, sender*/ ) {
+                if ( this.selected > 0 ) {
+                    this.selected -= 1;
+                }
+            },
+
+            /**
+             * Fires the appropriate event when a bound keyboard event is received
+             *
+             * @method keyHandler
+             */
+            keyHandler: function ( e, data ) {
+                this.asyncFire( 'key-' + data, {event: e, key: data} );
+            },
+
+            /**
+             * Binds list of keys to the keyHandler using Mousetrap.
+             * Uses the markdown and raw attributes to create lists
+             * of file types indexed by the appropriate parser
+             *
+             * @method ready
+             */
+            ready: function () {
+                //setup key bindings
+                Mousetrap.bind( this.keys, this.keyHandler.bind( this ) );
+
+                //create lists of file types by parser
+                ['markdown', 'raw'].reduce( function ( obj, type ) {
+                    obj[type + 'List'] = obj[type].split( /,\s*/ );
+                    return obj;
+                }, this );
+            },
+
+            /**
+             * Triggers Prism to mark up the first <code> element found
+             *
+             * @method highlight
+             */
+            highlight: function ( e, details, sender ) {
+                setTimeout( function () {
+                    Prism.highlightElement( sender.querySelector( 'code' ) );
+                }, 100 )
+            },
+
+            /**
+             * Checks the file extension against the type lists
+             *
+             * @method matchExtension
+             */
+            matchExtension: function ( value, type ) {
+                return this[type + 'List'].some( function ( valid ) {
+                    return valid === value;
+                } );
+            },
+
+            /**
+             * Parses the directory listing into an array of objects
+             * containing file metadata
+             *
+             * @method handleFilesList
+             */
+            handleFilesList: function ( e, data/*, sender*/ ) {
+                var i = 0;
+                [].slice.call( data.response.querySelectorAll( 'li' ), 0 ).reduce( function ( files, li ) {
+                    var name = li.innerText.trim();
+                    files.push( {
+                        name: name,
+                        index: i++,
+                        extension: name.split( '.' ).pop()
+                    } );
+                    return files;
+                }, this.files );
+            },
+            settings: function () {
+                this.$.settings.toggle();
+            }
+        } );
+
+    </script>
+
+</polymer-element>
