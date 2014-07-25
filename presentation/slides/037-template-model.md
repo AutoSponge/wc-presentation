@@ -1,8 +1,8 @@
 ##Other Models
 
-Templates have their own models
+Templates have their own models.
 
-as do their instances
+Template instances also have models.
 
 ```javascript
 showModel: function ( e, detail, sender ) {
