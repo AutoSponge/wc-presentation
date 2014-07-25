@@ -24,15 +24,17 @@ Example:
 <link rel="import" href="../marked-element/marked-element.html">
 <link rel="import" href="../paper-progress/paper-progress.html">
 <link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../core-icons/iconsets/av-icons.html">
 
 <!-- external script file dependencies -->
 <script src="../mousetrap/mousetrap.min.js"></script>
 <script src="../prismjs/prism.js"></script>
 
-<polymer-element name="wc-presentation"
-                 on-key-right="{{next}}"
-                 on-key-left="{{prev}}"
-                 attributes="url markdown raw">
+<polymer-element
+    name="wc-presentation"
+    on-key-right="{{ next }}"
+    on-key-left="{{ prev }}"
+    attributes="url markdown raw">
 
     <template>
         <style>
@@ -40,7 +42,8 @@ Example:
                 position: absolute;
                 width: 100%;
                 height: 100%;
-                box-sizing: border-box; }
+                box-sizing: border-box;
+                overflow-x: hidden; }
 
             #controls paper-input /deep/ input {
                 text-align: center; }
@@ -53,10 +56,10 @@ Example:
 
         <!-- import the list of slides -->
         <core-ajax
-                auto
-                url="{{ url }}"
-                handleAs="document"
-                on-core-response="{{ handleFilesList }}"></core-ajax>
+            auto
+            url="{{ url }}"
+            handleAs="document"
+            on-core-response="{{ handleFilesList }}"></core-ajax>
 
         <!-- start the presentation section -->
         <section class="presentation" layout vertical>
@@ -68,20 +71,23 @@ Example:
             <section id="content" flex relative>
 
                 <!-- the presentation's pages -->
-                <core-animated-pages id="slides" transitions="slide-from-right" selected="{{ selected }}" notap>
+                <core-animated-pages
+                    id="slides"
+                    transitions="slide-from-right"
+                    selected="{{ selected }}" notap>
 
                     <template repeat="{{ file in files }}">
                         <article class="slide" horizontal layout center-justified>
                             <core-ajax
-                                    auto
-                                    url="{{ url + file.name }}"
-                                    handleAs="text"
-                                    response="{{ file.body }}"></core-ajax>
+                                auto
+                                url="{{ url + file.name }}"
+                                handleAs="text"
+                                response="{{ file.body }}"></core-ajax>
                             <template if="{{ file.extension | matchExtension('markdown') }}">
                                 <marked-element
-                                        class="markdown"
-                                        text="{{ file.body }}"
-                                        on-marked-js-highlight="{{ highlight }}"></marked-element>
+                                    class="markdown"
+                                    text="{{ file.body }}"
+                                    on-marked-js-highlight="{{ highlight }}"></marked-element>
                             </template>
                             <template if="{{ file.extension | matchExtension('raw') }}">
                                 {{ file.body }}
@@ -96,9 +102,9 @@ Example:
             <!-- end presentation's main content area -->
 
             <section id="controls" horizontal layout center-justified>
-                <core-icon icon="icons:arrow-back" on-click="{{prev}}"></core-icon>
+                <core-icon icon="av:skip-previous" on-click="{{ prev }}"></core-icon>
                 <paper-input value="{{ selected }}"></paper-input>
-                <core-icon icon="icons:arrow-forward" on-click="{{next}}"></core-icon>
+                <core-icon icon="av:skip-next" on-click="{{ next }}"></core-icon>
             </section>
 
         </section>
@@ -162,12 +168,23 @@ Example:
              * @default []
              */
             files: [],
+
+            /**
+             * The files loaded from the supplied url
+             *
+             * @attribute selected
+             * @type number
+             * @default 0
+             */
+            selected: 0,
+
             /**
              * Updates the selected attribute to the next slide
              *
              * @method next
              */
             next: function ( /*e, data, sender*/ ) {
+                this.selected = +this.selected;
                 if ( this.selected < this.files.length - 1 ) {
                     this.selected += 1;
                 }
@@ -179,6 +196,7 @@ Example:
              * @method prev
              */
             prev: function ( /*e, data, sender*/ ) {
+                this.selected = +this.selected;
                 if ( this.selected > 0 ) {
                     this.selected -= 1;
                 }
@@ -212,14 +230,21 @@ Example:
             },
 
             /**
-             * Triggers Prism to mark up the first <code> element found
+             * Triggers Prism to mark up the <code> elements found
              *
              * @method highlight
              */
-            highlight: function ( e, details, sender ) {
-                setTimeout( function () {
-                    Prism.highlightElement( sender.querySelector( 'code' ) );
-                }, 100 )
+            highlight: function ( e/*, details, sender*/ ) {
+                if ( this.highlightAll ) {
+                    //throttle this till they're all loaded
+                    clearTimeout( this.highlightAll );
+                }
+                this.highlightAll = setTimeout( function () {
+                    var elms = e.target.shadowRoot.querySelectorAll( 'code' );
+                    [].slice.call( elms, 0 ).forEach( function ( elm ) {
+                        Prism.highlightElement( elm );
+                    } );
+                }, 300 )
             },
 
             /**
@@ -240,19 +265,16 @@ Example:
              * @method handleFilesList
              */
             handleFilesList: function ( e, data/*, sender*/ ) {
-                var i = 0;
-                [].slice.call( data.response.querySelectorAll( 'li' ), 0 ).reduce( function ( files, li ) {
+                var elms = data.response.querySelectorAll( 'li' );
+                [].slice.call( elms, 0 ).reduce( function ( files, li, i ) {
                     var name = li.innerText.trim();
                     files.push( {
                         name: name,
-                        index: i++,
+                        index: i,
                         extension: name.split( '.' ).pop()
                     } );
                     return files;
                 }, this.files );
-            },
-            settings: function () {
-                this.$.settings.toggle();
             }
         } );
 

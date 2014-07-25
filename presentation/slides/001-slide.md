@@ -1,5 +1,12 @@
-#Web Components
+##Dynamic Bindings
 
-##Less Code, More Fun
+This list of slides was loaded with this:
 
-How to build small applications with Polymer's web components
+```markup
+<core-ajax
+    auto
+    url="{{ url }}"
+    handleAs="document"
+    on-core-response="{{ handleFilesList }}">
+</core-ajax>
+```    
