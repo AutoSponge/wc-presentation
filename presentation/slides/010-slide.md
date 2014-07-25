@@ -1,6 +1,12 @@
-##Free Docs
+##Custom Elements
 
-If you follow the naming and commenting conventions, it just works
+This list of slides was loaded with this:
 
-- [local](./presentation/components/wc-presentation/)
-- [github](http://autosponge.github.io/wc-presentation/presentation/components/wc-presentation/)
+```markup
+<core-ajax
+    auto
+    url="{{ url }}"
+    handleAs="document"
+    on-core-response="{{ handleFilesList }}">
+</core-ajax>
+```    
