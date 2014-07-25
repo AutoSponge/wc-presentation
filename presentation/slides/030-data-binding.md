@@ -1,6 +1,6 @@
-##Data Binding
+##Two-way Data Binding
 
-We're updating the model in many ways:
+We're updating/displaying the model in many ways:
  
 ```markup
 <paper-input value="{{ selected }}">
@@ -16,3 +16,5 @@ next: function ( /*e, data, sender*/ ) {
     }
 }
 ```
+
+<a class="docs" target="_blank" href="http://www.polymer-project.org/docs/polymer/databinding.html"></a>

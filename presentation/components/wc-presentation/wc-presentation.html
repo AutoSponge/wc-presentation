@@ -21,15 +21,33 @@ Example:
 <link rel="import" href="../core-animated-pages/transitions/slide-from-right.html">
 <link rel="import" href="../core-ajax/core-ajax.html">
 <link rel="import" href="../core-icons/core-icons.html">
+<link rel="import" href="../core-icons/iconsets/av-icons.html">
 <link rel="import" href="../marked-element/marked-element.html">
 <link rel="import" href="../paper-progress/paper-progress.html">
 <link rel="import" href="../paper-input/paper-input.html">
-<link rel="import" href="../core-icons/iconsets/av-icons.html">
+<link rel="import" href="../paper-dialog/paper-dialog.html">
+<link rel="import" href="../paper-dialog/paper-dialog-transition.html">
 
-<!-- external script file dependencies -->
-<script src="../mousetrap/mousetrap.min.js"></script>
-<script src="../prismjs/prism.js"></script>
+<!--
+external script file dependencies
 
+You want to separate out the <script> tag into a separate .html file
+that you include using the <link> tag.  This will allow multiple
+instances to load from the cache.
+
+Although we only have one instance of this component, someone else
+could reuse it a different way.  So, follow the patterns!
+-->
+
+<link rel="import" href="prism-include.html">
+<link rel="import" href="mousetrap-include.html">
+
+<!--
+This is our element.  Make sure this name
+matches the file name, the file's directory
+and as the first parameter when invoking Polymer
+below.
+-->
 <polymer-element
     name="wc-presentation"
     on-key-right="{{ next }}"
@@ -47,6 +65,43 @@ Example:
 
             #controls paper-input /deep/ input {
                 text-align: center; }
+
+            .raw {
+                font-size: 6em; }
+
+            .model {
+                position: absolute;
+                left: 0;
+                top: 0;
+                fill: white;
+            }
+
+            .model:hover {
+                fill: grey;
+            }
+
+            .docs {
+                position: absolute;
+                left: 0;
+                top: 24px;
+                display: block;
+                text-indent: -9999px;
+                width: 24px;
+                height: 16px;
+            }
+
+            .docs:hover {
+                background: url('p-logo.svg');
+                background-size: 24px 16px;
+            }
+
+            #dialog {
+                width: 60%;
+            }
+
+            #dialog pre code {
+                overflow-x: hidden;
+            }
 
         </style>
 
@@ -83,6 +138,9 @@ Example:
                                 url="{{ url + file.name }}"
                                 handleAs="text"
                                 response="{{ file.body }}"></core-ajax>
+                            <span>
+                                <core-icon class="model" icon="icons:settings" on-click="{{ showModel }}"></core-icon>
+                            </span>
                             <template if="{{ file.extension | matchExtension('markdown') }}">
                                 <marked-element
                                     class="markdown"
@@ -90,7 +148,7 @@ Example:
                                     on-marked-js-highlight="{{ highlight }}"></marked-element>
                             </template>
                             <template if="{{ file.extension | matchExtension('raw') }}">
-                                {{ file.body }}
+                                <div class="raw">{{ file.body }}</div>
                             </template>
                         </article>
                     </template>
@@ -101,11 +159,19 @@ Example:
             </section>
             <!-- end presentation's main content area -->
 
+            <!-- controls -->
             <section id="controls" horizontal layout center-justified>
                 <core-icon icon="av:skip-previous" on-click="{{ prev }}"></core-icon>
                 <paper-input value="{{ selected }}"></paper-input>
                 <core-icon icon="av:skip-next" on-click="{{ next }}"></core-icon>
             </section>
+
+            <!-- dialog -->
+            <paper-dialog
+                    id="dialog"
+                    class="markdown"
+                    backdrop="true"
+                    transition="paper-dialog-transition-bottom"></paper-dialog>
 
         </section>
         <!-- end the presentation section -->
@@ -275,6 +341,28 @@ Example:
                     } );
                     return files;
                 }, this.files );
+            },
+
+            /**
+             * Updates the dialog innerHTML and toggles the dialog
+             *
+             * @method showModel
+             */
+            showModel: function ( e, detail, sender ) {
+                // learn you how to use 'automatic node finding'
+                var dialog = this.$.dialog;
+                // learn you how to access a template's model for fun and profit
+                var model = sender.templateInstance.model.file;
+                dialog.setAttribute( 'heading', model.name );
+                dialog.innerHTML = [
+                    '<pre>',
+                    '<code class="language-javascript">',
+                    JSON.stringify( model, null, '  ' ),
+                    '</code>',
+                    '</pre>'
+                ].join( '' );
+                Prism.highlightElement( dialog.querySelector( 'code' ) );
+                dialog.toggle();
             }
         } );
 

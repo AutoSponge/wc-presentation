@@ -1,4 +1,4 @@
-##Event Binding
+##Declarative Event Handing
 
 Then we handled the response with this: 
 
@@ -16,4 +16,5 @@ handleFilesList: function ( e, data/*, sender*/ ) {
     }, this.files );
 }
 ```
-    
+
+<a class="docs" target="_blank" href="http://www.polymer-project.org/docs/polymer/polymer.html#declarative-event-mapping"></a>

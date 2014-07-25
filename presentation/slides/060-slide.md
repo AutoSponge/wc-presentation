@@ -1,5 +1,0 @@
-##Encouraging
-
-- Innovation
-- Separation
-- Composition
