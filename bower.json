@@ -14,7 +14,8 @@
     "paper-icon-button": "Polymer/paper-icon-button#~0.3.4",
     "prismjs": "*",
     "marked-element": "Polymer/marked-element#~0.3.4",
-    "paper-dialog": "Polymer/paper-dialog#~0.3.4"
+    "paper-dialog": "Polymer/paper-dialog#~0.3.4",
+    "core-component-page": "Polymer/core-component-page#~0.3.4"
   },
   "devDependencies": {},
   "resolutions": {
