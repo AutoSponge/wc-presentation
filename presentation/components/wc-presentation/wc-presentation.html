@@ -27,6 +27,7 @@ Example:
 <link rel="import" href="../paper-input/paper-input.html">
 <link rel="import" href="../paper-dialog/paper-dialog.html">
 <link rel="import" href="../paper-dialog/paper-dialog-transition.html">
+<link rel="import" href="../firebase-element/firebase-element.html">
 
 <!--
 external script file dependencies
@@ -116,11 +117,16 @@ below.
             handleAs="document"
             on-core-response="{{ handleFilesList }}"></core-ajax>
 
+        <!-- connection to firebase data for remote sync -->
+        <firebase-element
+                location=""
+                data="{{ data }}"></firebase-element>
+
         <!-- start the presentation section -->
         <section class="presentation" layout vertical>
 
             <!-- display progress -->
-            <paper-progress value="{{ selected + 1 }}" min="0" max="{{ files.length }}"></paper-progress>
+            <paper-progress value="{{ data.selected + 1 }}" min="0" max="{{ files.length }}"></paper-progress>
 
             <!-- the presentation's main content area -->
             <section id="content" flex relative>
@@ -129,7 +135,7 @@ below.
                 <core-animated-pages
                     id="slides"
                     transitions="slide-from-right"
-                    selected="{{ selected }}" notap>
+                    selected="{{ data.selected }}" notap>
 
                     <template repeat="{{ file in files }}">
                         <article class="slide" horizontal layout center-justified>
@@ -162,7 +168,8 @@ below.
             <!-- controls -->
             <section id="controls" horizontal layout center-justified>
                 <core-icon icon="av:skip-previous" on-click="{{ prev }}"></core-icon>
-                <paper-input value="{{ selected }}"></paper-input>
+                <!--<paper-input value="{{ data.selected }}"></paper-input>-->
+                <paper-input value="{{ data.selected }}"></paper-input>
                 <core-icon icon="av:skip-next" on-click="{{ next }}"></core-icon>
             </section>
 
@@ -236,23 +243,23 @@ below.
             files: [],
 
             /**
-             * The files loaded from the supplied url
+             * The slide position data
              *
-             * @attribute selected
-             * @type number
-             * @default 0
+             * @attribute data
+             * @type object
+             * @default {selected: 0}
              */
-            selected: 0,
-
+            data: {
+                selected: 0
+            },
             /**
              * Updates the selected attribute to the next slide
              *
              * @method next
              */
             next: function ( /*e, data, sender*/ ) {
-                this.selected = +this.selected;
-                if ( this.selected < this.files.length - 1 ) {
-                    this.selected += 1;
+                if ( this.data.selected < this.files.length - 1 ) {
+                    this.data.selected += 1;
                 }
             },
 
@@ -262,9 +269,8 @@ below.
              * @method prev
              */
             prev: function ( /*e, data, sender*/ ) {
-                this.selected = +this.selected;
-                if ( this.selected > 0 ) {
-                    this.selected -= 1;
+                if ( this.data.selected > 0 ) {
+                    this.data.selected -= 1;
                 }
             },
 
