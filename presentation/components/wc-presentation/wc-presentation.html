@@ -52,6 +52,7 @@ below.
 <polymer-element
     name="wc-presentation"
     on-key-right="{{ next }}"
+    on-key-space="{{ next }}"
     on-key-left="{{ prev }}"
     attributes="url markdown raw">
 
@@ -119,6 +120,7 @@ below.
 
         <!-- connection to firebase data for remote sync -->
         <firebase-element
+                id="firebase"
                 location=""
                 data="{{ data }}"></firebase-element>
 
@@ -126,7 +128,7 @@ below.
         <section class="presentation" layout vertical>
 
             <!-- display progress -->
-            <paper-progress value="{{ data.selected + 1 }}" min="0" max="{{ files.length }}"></paper-progress>
+            <paper-progress value="{{ data.selected + 1 }}" min="0" max="{{ data.files }}"></paper-progress>
 
             <!-- the presentation's main content area -->
             <section id="content" flex relative>
@@ -230,7 +232,7 @@ below.
              * @type array
              * @default ['right', 'left']
              */
-            keys: ['right', 'left'],
+            keys: ['right', 'left', 'space'],
 
             /**
              * The files loaded from the supplied url
@@ -246,10 +248,11 @@ below.
              *
              * @attribute data
              * @type object
-             * @default {selected: 0}
+             * @default {selected: 0,files: 0}
              */
             data: {
-                selected: 0
+                selected: 0,
+                files: 0
             },
             /**
              * Updates the selected attribute to the next slide
@@ -257,7 +260,7 @@ below.
              * @method next
              */
             next: function ( /*e, data, sender*/ ) {
-                if ( this.data.selected < this.files.length - 1 ) {
+                if ( this.data.selected < this.data.files - 1 ) {
                     this.data.selected += 1;
                 }
             },
@@ -346,6 +349,7 @@ below.
                     } );
                     return files;
                 }, this.files );
+                this.updateFiles();
             },
 
             /**
@@ -368,9 +372,20 @@ below.
                 ].join( '' );
                 Prism.highlightElement( dialog.querySelector( 'code' ) );
                 dialog.toggle();
+            },
+            updateFiles: function () {
+                var app = this;
+                var attempt = setInterval( function () {
+                    if ( app.$.firebase.dataReady ) {
+                        app.data.files = app.files.length;
+                        clearInterval( attempt );
+                    }
+                }, 100 );
             }
         } );
 
     </script>
 
 </polymer-element>
+
+<!-- TODO login control for write access && guids for presentations? -->
