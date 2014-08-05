@@ -21,13 +21,17 @@ Example:
 <link rel="import" href="../core-animated-pages/transitions/slide-from-right.html">
 <link rel="import" href="../core-ajax/core-ajax.html">
 <link rel="import" href="../core-icons/core-icons.html">
+<link rel="import" href="../core-menu/core-menu.html">
+<link rel="import" href="../core-menu/core-submenu.html">
 <link rel="import" href="../core-icons/iconsets/av-icons.html">
 <link rel="import" href="../marked-element/marked-element.html">
 <link rel="import" href="../paper-progress/paper-progress.html">
 <link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../paper-button/paper-button.html">
 <link rel="import" href="../paper-dialog/paper-dialog.html">
 <link rel="import" href="../paper-dialog/paper-dialog-transition.html">
 <link rel="import" href="../firebase-element/firebase-element.html">
+<link rel="import" href="../firebase-element/firebase-login.html">
 
 <!--
 external script file dependencies
@@ -50,342 +54,427 @@ and as the first parameter when invoking Polymer
 below.
 -->
 <polymer-element
-    name="wc-presentation"
-    on-key-right="{{ next }}"
-    on-key-space="{{ next }}"
-    on-key-left="{{ prev }}"
-    attributes="url markdown raw">
+        name="wc-presentation"
+        on-key-right="{{ next }}"
+        on-key-space="{{ next }}"
+        on-key-left="{{ prev }}"
+        attributes="url markdown raw">
 
-    <template>
-        <style>
-            :host {
-                position: absolute;
-                width: 100%;
-                height: 100%;
-                box-sizing: border-box;
-                overflow-x: hidden; }
+<template>
+    <style>
+        :host {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
 
-            #controls paper-input /deep/ input {
-                text-align: center; }
+        #controls paper-input /deep/ input {
+            text-align: center;
+        }
 
-            .raw {
-                font-size: 6em; }
+        .raw {
+            font-size: 6em;
+        }
 
-            .model {
-                position: absolute;
-                left: 0;
-                top: 0;
-                fill: white;
-            }
+        .settings {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
 
-            .model:hover {
-                fill: grey;
-            }
+        .settings /deep/ core-menu {
+            margin: 0;
+        }
 
-            .docs {
-                position: absolute;
-                left: 0;
-                top: 24px;
-                display: block;
-                text-indent: -9999px;
-                width: 24px;
-                height: 16px;
-            }
+        .settings /deep/ core-icon {
+            fill: white;
+        }
 
-            .docs:hover {
-                background: url('p-logo.svg');
-                background-size: 24px 16px;
-            }
+        .settings /deep/ core-icon:hover {
+            fill: grey;
+        }
 
-            #dialog {
-                width: 60%;
-            }
+        .docs {
+            position: absolute;
+            left: 0;
+            top: 24px;
+            display: block;
+            text-indent: -9999px;
+            width: 24px;
+            height: 16px;
+        }
 
-            #dialog pre code {
-                overflow-x: hidden;
-            }
+        .docs:hover {
+            background: url('p-logo.svg');
+            background-size: 24px 16px;
+        }
 
-        </style>
+        #dialog {
+            width: 60%;
+        }
 
-        <!-- external stylesheet -->
-        <link rel="stylesheet" href="wc-presentation.css">
-        <link rel="stylesheet" href="../prismjs/prism-okaidia.css">
+        #dialog /deep/ #main {
+            overflow: hidden;
+        }
 
-        <!-- import the list of slides -->
-        <core-ajax
+        #dialog pre code {
+            overflow-x: hidden;
+        }
+
+    </style>
+
+    <!-- external stylesheet -->
+    <link rel="stylesheet" href="wc-presentation.css">
+    <link rel="stylesheet" href="../prismjs/prism-okaidia.css">
+
+    <!-- import the list of slides -->
+    <core-ajax
             auto
             url="{{ url }}"
             handleAs="document"
             on-core-response="{{ handleFilesList }}"></core-ajax>
 
-        <!-- connection to firebase data for remote sync -->
-        <firebase-element
-                id="firebase"
-                location=""
-                data="{{ data }}"></firebase-element>
+    <!-- connection to firebase data for remote sync -->
+    <firebase-element
+            id="database"
+            data="{{ data }}"></firebase-element>
 
-        <!-- start the presentation section -->
-        <section class="presentation" layout vertical>
+    <!-- start the presentation section -->
+    <section class="presentation" layout vertical>
 
-            <!-- display progress -->
-            <paper-progress value="{{ data.selected + 1 }}" min="0" max="{{ data.files }}"></paper-progress>
+        <!-- display progress -->
+        <paper-progress value="{{ data.selected + 1 }}" min="0" max="{{ data.files }}"></paper-progress>
 
-            <!-- the presentation's main content area -->
-            <section id="content" flex relative>
+        <!-- the presentation's main content area -->
+        <section id="content" flex relative>
 
-                <!-- the presentation's pages -->
-                <core-animated-pages
+            <!-- the presentation's pages -->
+            <core-animated-pages
                     id="slides"
                     transitions="slide-from-right"
                     selected="{{ data.selected }}" notap>
 
-                    <template repeat="{{ file in files }}">
-                        <article class="slide" horizontal layout center-justified>
-                            <core-ajax
+                <template repeat="{{ file in files }}">
+                    <article class="slide" horizontal layout center-justified>
+                        <core-ajax
                                 auto
                                 url="{{ url + file.name }}"
                                 handleAs="text"
                                 response="{{ file.body }}"></core-ajax>
-                            <span>
-                                <core-icon class="model" icon="icons:settings" on-tap="{{ showModel }}"></core-icon>
+                            <span class="settings">
+                                <core-menu>
+                                    <core-submenu icon="icons:settings" label="">
+                                        <core-item label="Login" on-tap="{{ showLogin }}"></core-item>
+                                        <core-item label="Show Model" on-tap="{{ showModel }}"></core-item>
+                                    </core-submenu>
+                                </core-menu>
                             </span>
-                            <template if="{{ file.extension | matchExtension('markdown') }}">
-                                <marked-element
+                        <template if="{{ file.extension | matchExtension('markdown') }}">
+                            <marked-element
                                     class="markdown"
                                     text="{{ file.body }}"
                                     on-marked-js-highlight="{{ highlight }}"></marked-element>
-                            </template>
-                            <template if="{{ file.extension | matchExtension('raw') }}">
-                                <div class="raw">{{ file.body }}</div>
-                            </template>
-                        </article>
-                    </template>
+                        </template>
+                        <template if="{{ file.extension | matchExtension('raw') }}">
+                            <div class="raw">{{ file.body }}</div>
+                        </template>
+                    </article>
+                </template>
 
-                </core-animated-pages>
-                <!-- end presentation's pages -->
-
-            </section>
-            <!-- end presentation's main content area -->
-
-            <!-- controls -->
-            <section id="controls" horizontal layout center-justified>
-                <core-icon icon="av:skip-previous" on-tap="{{ prev }}"></core-icon>
-                <paper-input value="{{ data.selected }}"></paper-input>
-                <core-icon icon="av:skip-next" on-tap="{{ next }}"></core-icon>
-            </section>
-
-            <!-- dialog -->
-            <paper-dialog
-                    id="dialog"
-                    class="markdown"
-                    backdrop="true"
-                    transition="paper-dialog-transition-bottom"></paper-dialog>
+            </core-animated-pages>
+            <!-- end presentation's pages -->
 
         </section>
-        <!-- end the presentation section -->
+        <!-- end presentation's main content area -->
 
-    </template>
+        <!-- controls -->
+        <section id="controls" horizontal layout center-justified>
+            <core-icon icon="av:skip-previous" on-tap="{{ prev }}"></core-icon>
+            <paper-input value="{{ data.selected }}"></paper-input>
+            <core-icon icon="av:skip-next" on-tap="{{ next }}"></core-icon>
+        </section>
 
-    <script>
+        <!-- dialog -->
+        <paper-dialog
+                id="dialog"
+                class="markdown"
+                backdrop="true"
+                transition="paper-dialog-transition-bottom">
 
-        Polymer( 'wc-presentation', {
+            <firebase-login
+                    id="login"
+                    user="{{ user }}"
+                    statusKnown="{{ statusKnown }}"
+                    location="https://wc-presentation.firebaseio.com"
+                    on-login="{{ reset }}"></firebase-login>
 
-            /**
-             * Fired when bound keyboard event is received
-             *
-             * Example: key-left
-             *
-             * @event key-<keyname>
-             */
+            <pre hidden?="{{ dialog | dialogContent('model') }}">
+                <code class="language-javascript"></code>
+            </pre>
+            <div hidden?="{{ dialog | dialogContent('login') }}">
+                <div veritcal layout hidden?="{{ statusKnown && user }}">
+                    <paper-input label="user" value="{{ email }}"></paper-input>
+                    <paper-input label="password" value="{{ password }}" type="password"></paper-input>
+                    <paper-button block raisedButton label="Login" on-tap="{{ login }}"></paper-button>
+                </div>
+                <p>{{statusKnown && user && 'Logged in' || statusKnown && 'Logged out' || 'Unknown (checking status...)'}}</p>
+            </div>
+        </paper-dialog>
 
-            /**
-             * The url passed to core-ajax referencing a directory listing of slides
-             *
-             * @attribute url
-             * @type string
-             * @default ''
-             */
-            url: '',
+    </section>
+    <!-- end the presentation section -->
 
-            /**
-             * The list of file extensions parsed by marked (markdown parser)
-             *
-             * @attribute markdown
-             * @type string
-             * @default ''
-             */
-            markdown: 'md,markdown',
+</template>
 
-            /**
-             * The list of file extensions not parsed
-             *
-             * @attribute raw
-             * @type string
-             * @default ''
-             */
-            raw: 'txt',
+<script>
 
-            /**
-             * The keys that will be bound by Mousetrap to the keyHandler
-             *
-             * @attribute keys
-             * @type array
-             * @default ['right', 'left']
-             */
-            keys: ['right', 'left', 'space'],
+Polymer( 'wc-presentation', {
 
-            /**
-             * The files loaded from the supplied url
-             *
-             * @attribute files
-             * @type array
-             * @default []
-             */
-            files: [],
+    /**
+     * Fired when bound keyboard event is received
+     *
+     * Example: key-left
+     *
+     * @event key-<keyname>
+     */
 
-            /**
-             * The slide position data
-             *
-             * @attribute data
-             * @type object
-             * @default {selected: 0,files: 0}
-             */
-            data: {
-                selected: 0,
-                files: 0
-            },
-            /**
-             * Updates the selected attribute to the next slide
-             *
-             * @method next
-             */
-            next: function ( /*e, data, sender*/ ) {
-                if ( this.data.selected < this.data.files - 1 ) {
-                    this.data.selected += 1;
-                }
-            },
+    /**
+     * The url passed to core-ajax referencing a directory listing of slides
+     *
+     * @attribute url
+     * @type string
+     * @default ''
+     */
+    url: '',
 
-            /**
-             * Updates the selected attribute to the previous slide
-             *
-             * @method prev
-             */
-            prev: function ( /*e, data, sender*/ ) {
-                if ( this.data.selected > 0 ) {
-                    this.data.selected -= 1;
-                }
-            },
+    /**
+     * The list of file extensions parsed by marked (markdown parser)
+     *
+     * @attribute markdown
+     * @type string
+     * @default ''
+     */
+    markdown: 'md,markdown',
 
-            /**
-             * Fires the appropriate event when a bound keyboard event is received
-             *
-             * @method keyHandler
-             */
-            keyHandler: function ( e, data ) {
-                this.asyncFire( 'key-' + data, {event: e, key: data} );
-            },
+    /**
+     * The list of file extensions not parsed
+     *
+     * @attribute raw
+     * @type string
+     * @default ''
+     */
+    raw: 'txt',
 
-            /**
-             * Binds list of keys to the keyHandler using Mousetrap.
-             * Uses the markdown and raw attributes to create lists
-             * of file types indexed by the appropriate parser
-             *
-             * @method ready
-             */
-            ready: function () {
-                //setup key bindings
-                Mousetrap.bind( this.keys, this.keyHandler.bind( this ) );
+    /**
+     * The keys that will be bound by Mousetrap to the keyHandler
+     *
+     * @attribute keys
+     * @type array
+     * @default ['right', 'left']
+     */
+    keys: ['right', 'left', 'space'],
 
-                //create lists of file types by parser
-                ['markdown', 'raw'].reduce( function ( obj, type ) {
-                    obj[type + 'List'] = obj[type].split( /,\s*/ );
-                    return obj;
-                }, this );
-            },
+    /**
+     * The files loaded from the supplied url
+     *
+     * @attribute files
+     * @type array
+     * @default []
+     */
+    files: [],
 
-            /**
-             * Triggers Prism to mark up the &lt;code&gt; elements found
-             *
-             * @method highlight
-             */
-            highlight: function ( e/*, details, sender*/ ) {
-                if ( this.highlightAll ) {
-                    //throttle this till they're all loaded
-                    clearTimeout( this.highlightAll );
-                }
-                this.highlightAll = setTimeout( function () {
-                    var elms = e.target.shadowRoot.querySelectorAll( 'code' );
-                    [].slice.call( elms, 0 ).forEach( function ( elm ) {
-                        Prism.highlightElement( elm );
-                    } );
-                }, 300 )
-            },
+    /**
+     * The slide position data
+     *
+     * @attribute data
+     * @type object
+     * @default {selected: 0,files: 0}
+     */
+    data: {
+        selected: 0,
+        files: 0
+    },
+    /**
+     * Updates the selected attribute to the next slide
+     *
+     * @method next
+     */
+    next: function ( /*e, data, sender*/ ) {
+        if ( this.data.selected < this.data.files - 1 ) {
+            this.data.selected += 1;
+        }
+    },
 
-            /**
-             * Checks the file extension against the type lists
-             *
-             * @method matchExtension
-             */
-            matchExtension: function ( value, type ) {
-                return this[type + 'List'].some( function ( valid ) {
-                    return valid === value;
-                } );
-            },
+    /**
+     * Updates the selected attribute to the previous slide
+     *
+     * @method prev
+     */
+    prev: function ( /*e, data, sender*/ ) {
+        if ( this.data.selected > 0 ) {
+            this.data.selected -= 1;
+        }
+    },
 
-            /**
-             * Parses the directory listing into an array of objects
-             * containing file metadata
-             *
-             * @method handleFilesList
-             */
-            handleFilesList: function ( e, data/*, sender*/ ) {
-                var elms = data.response.querySelectorAll( 'li' );
-                [].slice.call( elms, 0 ).reduce( function ( files, li, i ) {
-                    var name = li.innerText.trim();
-                    files.push( {
-                        name: name,
-                        index: i,
-                        extension: name.split( '.' ).pop()
-                    } );
-                    return files;
-                }, this.files );
-                this.updateFiles();
-            },
+    /**
+     * Fires the appropriate event when a bound keyboard event is received
+     *
+     * @method keyHandler
+     */
+    keyHandler: function ( e, data ) {
+        this.asyncFire( 'key-' + data, {event: e, key: data} );
+    },
 
-            /**
-             * Updates the dialog innerHTML and toggles the dialog
-             *
-             * @method showModel
-             */
-            showModel: function ( e, detail, sender ) {
-                // learn you how to use 'automatic node finding'
-                var dialog = this.$.dialog;
-                // learn you how to access a template's model for fun and profit
-                var model = sender.templateInstance.model.file;
-                dialog.setAttribute( 'heading', model.name );
-                dialog.innerHTML = [
-                    '<pre>',
-                    '<code class="language-javascript">',
-                    JSON.stringify( model, null, '  ' ),
-                    '</code>',
-                    '</pre>'
-                ].join( '' );
-                Prism.highlightElement( dialog.querySelector( 'code' ) );
-                dialog.toggle();
-            },
-            updateFiles: function () {
-                var app = this;
-                var attempt = setInterval( function () {
-                    if ( app.$.firebase.dataReady ) {
-                        app.data.files = app.files.length;
-                        clearInterval( attempt );
-                    }
-                }, 100 );
-            }
+    /**
+     * Binds list of keys to the keyHandler using Mousetrap.
+     * Uses the markdown and raw attributes to create lists
+     * of file types indexed by the appropriate parser
+     *
+     * @method ready
+     */
+    ready: function () {
+        //setup key bindings
+        Mousetrap.bind( this.keys, this.keyHandler.bind( this ) );
+
+        //create lists of file types by parser
+        ['markdown', 'raw'].reduce( function ( obj, type ) {
+            obj[type + 'List'] = obj[type].split( /,\s*/ );
+            return obj;
+        }, this );
+    },
+
+    /**
+     * Triggers Prism to mark up the &lt;code&gt; elements found
+     *
+     * @method highlight
+     */
+    highlight: function ( e/*, details, sender*/ ) {
+        if ( this.highlightAll ) {
+            //throttle this till they're all loaded
+            clearTimeout( this.highlightAll );
+        }
+        this.highlightAll = setTimeout( function () {
+            var elms = e.target.shadowRoot.querySelectorAll( 'code' );
+            [].slice.call( elms, 0 ).forEach( function ( elm ) {
+                Prism.highlightElement( elm );
+            } );
+        }, 300 )
+    },
+
+    /**
+     * Checks the file extension against the type lists
+     *
+     * @method matchExtension
+     */
+    matchExtension: function ( value, type ) {
+        return this[type + 'List'].some( function ( valid ) {
+            return valid === value;
         } );
+    },
 
-    </script>
+    /**
+     * Parses the directory listing into an array of objects
+     * containing file metadata
+     *
+     * @method handleFilesList
+     */
+    handleFilesList: function ( e, data/*, sender*/ ) {
+        var elms = data.response.querySelectorAll( 'li' );
+        [].slice.call( elms, 0 ).reduce( function ( files, li, i ) {
+            var name = li.innerText.trim();
+            files.push( {
+                name: name,
+                index: i,
+                extension: name.split( '.' ).pop()
+            } );
+            return files;
+        }, this.files );
+        this.updateFiles();
+    },
+
+    /**
+     * Updates the dialog content and toggles the dialog
+     *
+     * @method showModel
+     */
+    showModel: function ( e, detail, sender ) {
+        // learn you how to use 'automatic node finding'
+        var dialog = this.$.dialog;
+        // learn you how to access a template's model for fun and profit
+        var model = sender.templateInstance.model.file;
+        var code = dialog.querySelector( 'code' );
+        code.innerHTML = JSON.stringify( model, null, '  ' );
+        Prism.highlightElement( code );
+        dialog.setAttribute( 'heading', model.name );
+        this.dialog = 'model';
+        dialog.toggle();
+    },
+    /**
+     * set the dialog content and display the dialog
+     *
+     * @method showLogin
+     */
+    showLogin: function () {
+        var dialog = this.$.dialog;
+        dialog.setAttribute( 'heading', 'login' );
+        this.dialog = 'login';
+        dialog.toggle();
+    },
+    /**
+     * filter which dialog content to show
+     *
+     * @method dialogContent
+     */
+    dialogContent: function ( value, compare ) {
+        return value !== compare;
+    },
+    /**
+     * update the number of files
+     *
+     * @method updateFiles
+     */
+    updateFiles: function () {
+        this.data.files = this.files.length;
+    },
+    /**
+     * login to firebase
+     *
+     * @method login
+     */
+    login: function () {
+        this.$.login.login( 'password', {
+            email: this.email,
+            password: this.password,
+            rememberMe: true
+        } );
+    },
+    /**
+     * cleans up state when we log in
+     *
+     * @method reset
+     */
+    reset: function () {
+        var app = this;
+        var attempt = setInterval( function () {
+            if ( app.$.database.dataReady ) {
+                app.updateFiles();
+                app.data.selected = 0;
+                clearInterval( attempt );
+            }
+        }, 500 );
+    },
+    /**
+     * updates the firebase pointer once logged in
+     *
+     * @method userChanged
+     */
+    userChanged: function () {
+        this.$.database.location = 'https://wc-presentation.firebaseio.com/' + this.user.id;
+    }
+} );
+
+</script>
 
 </polymer-element>
-
-<!-- TODO login control for write access && guids for presentations? -->
