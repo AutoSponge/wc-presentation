@@ -8,15 +8,11 @@ Template instances also have models.
 showModel: function ( e, detail, sender ) {
     var dialog = this.$.dialog;
     var model = sender.templateInstance.model.file;
+    var code = dialog.querySelector( 'code' );
+    code.innerHTML = JSON.stringify( model, null, '  ' );
+    Prism.highlightElement( code );
     dialog.setAttribute( 'heading', model.name );
-    dialog.innerHTML = [
-        '<pre>',
-        '<code class="language-javascript">',
-        JSON.stringify( model, null, '  ' ),
-        '</code>',
-        '</pre>'
-    ].join( '' );
-    Prism.highlightElement( dialog.querySelector( 'code' ) );
+    this.dialog = 'model';
     dialog.toggle();
 }
 ```

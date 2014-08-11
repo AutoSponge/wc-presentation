@@ -296,12 +296,22 @@ Polymer( 'wc-presentation', {
         selected: 0,
         files: 0
     },
+
+    /**
+     * Converts a value to a number (needed when not connected to firebase)
+     *
+     * @method toNumber
+     */
+    toNumber: function ( value ) {
+        return isNaN( +value ) ? 0 : +value;
+    },
     /**
      * Updates the selected attribute to the next slide
      *
      * @method next
      */
     next: function ( /*e, data, sender*/ ) {
+        this.data.selected = this.toNumber( this.data.selected );
         if ( this.data.selected < this.data.files - 1 ) {
             this.data.selected += 1;
         }
@@ -313,6 +323,7 @@ Polymer( 'wc-presentation', {
      * @method prev
      */
     prev: function ( /*e, data, sender*/ ) {
+        this.data.selected = this.toNumber( this.data.selected );
         if ( this.data.selected > 0 ) {
             this.data.selected -= 1;
         }

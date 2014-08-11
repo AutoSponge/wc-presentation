@@ -10,9 +10,9 @@ We're updating/displaying the model in many ways:
 
 ```javascript
 next: function ( /*e, data, sender*/ ) {
-    this.selected = +this.selected;
-    if ( this.selected < this.files.length - 1 ) {
-        this.selected += 1;
+    this.data.selected = this.toNumber( this.data.selected );
+    if ( this.data.selected < this.data.files - 1 ) {
+        this.data.selected += 1;
     }
 }
 ```
